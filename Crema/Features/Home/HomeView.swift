@@ -10,6 +10,7 @@ import Supabase
 
 struct HomeView: View {
     @Environment(AppState.self) private var appState
+    @State private var signOutError: String?
 
     var body: some View {
         ZStack {
@@ -30,6 +31,7 @@ struct HomeView: View {
                         .font(.cremaMono(size: 9))
                         .foregroundStyle(Color.cremaTextSecondary)
                         .textCase(.uppercase)
+                        .tracking(0.08 * 9)
 
                     Text(appState.session?.user.email ?? "—")
                         .font(.cremaBody(size: 14))
@@ -46,10 +48,24 @@ struct HomeView: View {
 
                 Spacer()
 
+                // Sign-out error
+                if let error = signOutError {
+                    Text(error)
+                        .font(.cremaBody(size: 12))
+                        .foregroundStyle(Color.cremaError)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
+
                 // Sign out
                 Button {
+                    signOutError = nil
                     Task {
-                        try? await supabase.auth.signOut()
+                        do {
+                            try await supabase.auth.signOut()
+                        } catch {
+                            signOutError = error.localizedDescription
+                        }
                     }
                 } label: {
                     Text("sign out")

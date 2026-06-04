@@ -27,7 +27,8 @@ struct ContentView: View {
                 AuthView()
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: appState.session?.user.id)
+        // Animate on a stable boolean so token refreshes don't trigger spurious cross-fades.
+        .animation(.easeInOut(duration: 0.3), value: appState.session != nil)
         .animation(.easeInOut(duration: 0.3), value: appState.isLoading)
     }
 }

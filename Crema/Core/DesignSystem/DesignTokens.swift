@@ -65,6 +65,13 @@ extension Color {
             ? UIColor(red: 0.173, green: 0.122, blue: 0.078, alpha: 1)  // #2C1F14
             : UIColor(red: 0.961, green: 0.933, blue: 0.894, alpha: 1)  // #F5EEE4
     })
+
+    /// Semantic error colour. Dark: #E07070 (warm red on dark bg), Light: #791F1F (deep crimson).
+    static let cremaError = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.878, green: 0.439, blue: 0.439, alpha: 1)  // #E07070
+            : UIColor(red: 0.475, green: 0.122, blue: 0.122, alpha: 1)  // #791F1F
+    })
 }
 
 // MARK: - Typography

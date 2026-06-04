@@ -22,8 +22,9 @@ struct AuthView: View {
     @State private var password        = ""
     @State private var confirmPassword = ""
     @State private var name            = ""
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var isLoading       = false
+    @State private var errorMessage:   String?
+    @State private var successMessage: String?
 
     var body: some View {
         ZStack {
@@ -57,6 +58,7 @@ struct AuthView: View {
                         email: $email,
                         isLoading: $isLoading,
                         errorMessage: $errorMessage,
+                        successMessage: $successMessage,
                         onSend: resetPassword,
                         onBack: { withAnimation { screen = .login } }
                     )
@@ -69,7 +71,10 @@ struct AuthView: View {
     // MARK: - Actions
 
     private func signIn() {
-        guard !email.isEmpty, !password.isEmpty else { return }
+        guard !email.isEmpty, !password.isEmpty else {
+            errorMessage = "Please enter your email and password."
+            return
+        }
         isLoading = true
         errorMessage = nil
         Task {
@@ -83,7 +88,14 @@ struct AuthView: View {
     }
 
     private func signUp() {
-        guard !email.isEmpty, !password.isEmpty else { return }
+        guard !email.isEmpty, !password.isEmpty else {
+            errorMessage = "Please fill in all fields."
+            return
+        }
+        guard password.count >= 8 else {
+            errorMessage = "Password must be at least 8 characters."
+            return
+        }
         guard password == confirmPassword else {
             errorMessage = "Passwords don't match."
             return
@@ -92,7 +104,9 @@ struct AuthView: View {
         errorMessage = nil
         Task {
             do {
-                try await supabase.auth.signUp(email: email, password: password)
+                // Pass the display name as user metadata so the API can store it.
+                let metadata: [String: AnyJSON]? = name.isEmpty ? nil : ["full_name": .string(name)]
+                try await supabase.auth.signUp(email: email, password: password, data: metadata)
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -101,13 +115,17 @@ struct AuthView: View {
     }
 
     private func resetPassword() {
-        guard !email.isEmpty else { return }
+        guard !email.isEmpty else {
+            errorMessage = "Please enter your email address."
+            return
+        }
         isLoading = true
         errorMessage = nil
+        successMessage = nil
         Task {
             do {
                 try await supabase.auth.resetPasswordForEmail(email)
-                errorMessage = "Check your inbox for a reset link."
+                successMessage = "Check your inbox for a reset link."
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -158,6 +176,8 @@ private struct LoginScreen: View {
                     field: .email,
                     keyboard: .emailAddress
                 )
+                .submitLabel(.next)
+                .onSubmit { focused = .password }
 
                 VStack(spacing: 5) {
                     HStack(alignment: .firstTextBaseline) {
@@ -165,10 +185,12 @@ private struct LoginScreen: View {
                             .font(.cremaMono(size: 9))
                             .foregroundStyle(Color.cremaTextSecondary)
                             .textCase(.uppercase)
+                            .tracking(0.08 * 9)
                         Spacer()
                         Button("forgot?", action: onForgot)
                             .font(.cremaBody(size: 11))
                             .foregroundStyle(Color.cremaCopper)
+                            .disabled(isLoading)
                     }
                     SecureTextField(
                         placeholder: "••••••••",
@@ -176,6 +198,8 @@ private struct LoginScreen: View {
                         focused: $focused,
                         field: .password
                     )
+                    .submitLabel(.go)
+                    .onSubmit(onSignIn)
                 }
             }
             .padding(.bottom, 20)
@@ -196,6 +220,7 @@ private struct LoginScreen: View {
                 Button("create account", action: onSignUp)
                     .font(.cremaBody(size: 13))
                     .foregroundStyle(Color.cremaCopper)
+                    .disabled(isLoading)
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 20)
@@ -246,6 +271,9 @@ private struct SignupScreen: View {
                         focused: $focused,
                         field: .name
                     )
+                    .submitLabel(.next)
+                    .onSubmit { focused = .email }
+
                     CremaTextField(
                         label: "email",
                         placeholder: "you@example.com",
@@ -254,11 +282,15 @@ private struct SignupScreen: View {
                         field: .email,
                         keyboard: .emailAddress
                     )
+                    .submitLabel(.next)
+                    .onSubmit { focused = .password }
+
                     VStack(spacing: 5) {
                         Text("password")
                             .font(.cremaMono(size: 9))
                             .foregroundStyle(Color.cremaTextSecondary)
                             .textCase(.uppercase)
+                            .tracking(0.08 * 9)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         SecureTextField(
                             placeholder: "8+ characters",
@@ -266,6 +298,8 @@ private struct SignupScreen: View {
                             focused: $focused,
                             field: .password
                         )
+                        .submitLabel(.next)
+                        .onSubmit { focused = .confirmPassword }
                     }
 
                     VStack(spacing: 5) {
@@ -273,6 +307,7 @@ private struct SignupScreen: View {
                             .font(.cremaMono(size: 9))
                             .foregroundStyle(Color.cremaTextSecondary)
                             .textCase(.uppercase)
+                            .tracking(0.08 * 9)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         SecureTextField(
                             placeholder: "repeat password",
@@ -280,6 +315,8 @@ private struct SignupScreen: View {
                             focused: $focused,
                             field: .confirmPassword
                         )
+                        .submitLabel(.go)
+                        .onSubmit(onSignUp)
                     }
                 }
                 .padding(.bottom, 20)
@@ -298,6 +335,7 @@ private struct SignupScreen: View {
                     Button("sign in", action: onBack)
                         .font(.cremaBody(size: 12))
                         .foregroundStyle(Color.cremaCopper)
+                        .disabled(isLoading)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 20)
@@ -323,6 +361,7 @@ private struct ForgotPasswordScreen: View {
     @Binding var email: String
     @Binding var isLoading: Bool
     @Binding var errorMessage: String?
+    @Binding var successMessage: String?
 
     let onSend: () -> Void
     let onBack: () -> Void
@@ -365,11 +404,15 @@ private struct ForgotPasswordScreen: View {
                 field: .email,
                 keyboard: .emailAddress
             )
+            .submitLabel(.go)
+            .onSubmit(onSend)
             .padding(.bottom, 20)
 
-            // Error / success
+            // Error or success feedback
             if let msg = errorMessage {
                 ErrorLabel(message: msg).padding(.bottom, 12)
+            } else if let msg = successMessage {
+                SuccessLabel(message: msg).padding(.bottom, 12)
             }
 
             CremaPrimaryButton(label: "send reset link", isLoading: isLoading, action: onSend)
@@ -408,6 +451,7 @@ private struct CremaTextField: View {
                 .font(.cremaMono(size: 9))
                 .foregroundStyle(Color.cremaTextSecondary)
                 .textCase(.uppercase)
+                .tracking(0.08 * 9)
 
             TextField(placeholder, text: $text)
                 .font(.cremaBody(size: 14))
@@ -518,8 +562,23 @@ private struct ErrorLabel: View {
     var body: some View {
         Text(message)
             .font(.cremaBody(size: 12))
-            .foregroundStyle(Color(hex: "A32D2D"))
+            .foregroundStyle(Color.cremaError)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct SuccessLabel: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: 12, weight: .light))
+            Text(message)
+                .font(.cremaBody(size: 12))
+        }
+        .foregroundStyle(Color.cremaCopper)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
