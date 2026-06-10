@@ -105,7 +105,7 @@ struct ShotListView: View {
             ProgressView().tint(Color.cremaCopper)
             Spacer()
         } else if viewModel.shots.isEmpty {
-            VStack {
+            VStack(spacing: 8) {
                 Spacer()
                 Text("No shots logged yet.")
                     .font(.cremaBody(size: 14))
@@ -178,7 +178,7 @@ private struct ShotListRow: View {
                             .font(.cremaBody(size: 14, weight: .medium))
                             .foregroundStyle(Color.cremaTextPrimary)
                     }
-                    Text(shot.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    Text(shot.pulledAt.formatted(date: .abbreviated, time: .shortened))
                         .font(.cremaMono(size: 8))
                         .tracking(0.08 * 8)
                         .foregroundStyle(Color.cremaTextSecondary)
@@ -207,7 +207,7 @@ private struct ShotListRow: View {
             }
 
             if let notes = shot.notes, !notes.isEmpty {
-                Text(""\(notes)"")
+                Text("\u{201C}\(notes)\u{201D}")
                     .font(.cremaBody(size: 12))
                     .foregroundStyle(Color.cremaTextSecondary)
                     .lineSpacing(3)

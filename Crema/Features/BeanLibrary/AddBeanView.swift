@@ -18,7 +18,7 @@ struct AddBeanView: View {
     @State private var error: String?
     @FocusState private var focused: Field?
 
-    private enum Field { case name, roaster, origin }
+    fileprivate enum Field { case name, roaster, origin }
 
     private var canSave: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -179,7 +179,7 @@ private struct CremaFormInput: View {
             .font(.cremaBody(size: 14))
             .foregroundStyle(Color.cremaTextPrimary)
             .autocorrectionDisabled()
-            .textInputAutocapitalization(.words)
+            .textInputAutocapitalization(.sentences)
             .focused(focused, equals: field)
             .tint(Color.cremaCopper)
             .padding(.horizontal, 14)

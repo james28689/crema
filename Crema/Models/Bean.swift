@@ -39,7 +39,6 @@ struct Bean: Codable, Identifiable, Hashable {
     static func == (lhs: Bean, rhs: Bean) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     let id: UUID
-    let userId: UUID
     let name: String
     let roaster: String?
     let origin: String?
@@ -48,17 +47,4 @@ struct Bean: Codable, Identifiable, Hashable {
     let roastDate: String?
     let isActive: Bool
     let createdAt: Date
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case name
-        case roaster
-        case origin
-        case process
-        case roastLevel = "roast_level"
-        case roastDate = "roast_date"
-        case isActive = "is_active"
-        case createdAt = "created_at"
-    }
 }

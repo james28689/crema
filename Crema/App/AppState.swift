@@ -23,7 +23,7 @@ final class AppState {
     // events (sign-in, sign-out, token refresh, etc.) as they happen.
     private func observeAuthState() async {
         for await (_, session) in supabase.auth.authStateChanges {
-            self.session  = session
+            self.session = session
             self.isLoading = false
         }
     }

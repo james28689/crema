@@ -528,33 +528,6 @@ private struct SecureTextField: View {
     }
 }
 
-private struct CremaPrimaryButton: View {
-    let label: String
-    let isLoading: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Group {
-                if isLoading {
-                    ProgressView()
-                        .tint(Color.cremaBgPrimary)
-                } else {
-                    Text(label)
-                        .font(.cremaBody(size: 14, weight: .medium))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-        }
-        .foregroundStyle(Color.cremaBgPrimary)
-        .background(Color.cremaCopper)
-        .clipShape(Capsule())
-        .disabled(isLoading)
-        .opacity(isLoading ? 0.8 : 1)
-        .animation(.easeInOut(duration: 0.15), value: isLoading)
-    }
-}
 
 private struct ErrorLabel: View {
     let message: String

@@ -7,6 +7,13 @@
 
 import Foundation
 
+// MARK: - Response types
+
+private struct ShotListResponse: Decodable {
+    let data: [Shot]
+    let nextCursor: UUID?
+}
+
 // MARK: - Payload types
 
 /// Fields sent when logging a new shot. Server assigns id, user_id, and created_at.
@@ -57,17 +64,17 @@ final class ShotRepository: ShotRepositoryProtocol {
 
     /// Fetches all shots for the authenticated user.
     func fetchShots() async throws -> [Shot] {
-        try await api.get("shots/")
+        let response: ShotListResponse = try await api.get("shots/")
+        return response.data
     }
 
     /// Fetches shots filtered to a specific bean.
-    /// Query parameters are passed through URLQueryItem so the UUID is correctly
-    /// percent-encoded — avoids manual string interpolation into the path.
     func fetchShots(beanId: UUID) async throws -> [Shot] {
-        try await api.get(
+        let response: ShotListResponse = try await api.get(
             "shots/",
             queryItems: [URLQueryItem(name: "bean_id", value: beanId.uuidString.lowercased())]
         )
+        return response.data
     }
 
     /// Logs a new shot and returns the server-assigned record.

@@ -243,13 +243,13 @@ private struct ShotHistoryRow: View {
             }
 
             if let notes = shot.notes, !notes.isEmpty {
-                Text(""\(notes)"")
+                Text("\u{201C}\(notes)\u{201D}")
                     .font(.cremaBody(size: 12))
                     .foregroundStyle(Color.cremaTextSecondary)
                     .lineSpacing(3)
             }
 
-            Text(shot.createdAt.formatted(date: .abbreviated, time: .shortened))
+            Text(shot.pulledAt.formatted(date: .abbreviated, time: .shortened))
                 .font(.cremaMono(size: 8))
                 .tracking(0.08 * 8)
                 .foregroundStyle(Color.cremaTextSecondary.opacity(0.7))
