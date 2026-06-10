@@ -22,7 +22,7 @@ struct ContentView: View {
                         .kerning(-0.02 * 52)
                 }
             } else if appState.session != nil {
-                HomeView()
+                MainTabView()
             } else {
                 AuthView()
             }
