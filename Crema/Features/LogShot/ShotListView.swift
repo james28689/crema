@@ -32,9 +32,8 @@ final class ShotListViewModel {
             let (s, b) = try await (shots, beans)
             self.shots = s
             self.beanNames = Dictionary(uniqueKeysWithValues: b.map { ($0.id, $0.name) })
-        } catch {
-            self.error = error.localizedDescription
-        }
+        } catch APIError.unauthenticated { /* sign-out in progress, ContentView routes to AuthView */ }
+        catch { self.error = error.localizedDescription }
         isLoading = false
     }
 

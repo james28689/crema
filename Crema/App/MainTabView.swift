@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-enum AppTab { case beans, shots }
+enum AppTab { case beans, shots, profile }
 
 struct MainTabView: View {
     @State private var selectedTab: AppTab = .beans
@@ -23,6 +23,10 @@ struct MainTabView: View {
             }
             .tabItem { Label("Shots", systemImage: "timer") }
             .tag(AppTab.shots)
+
+            HomeView()
+            .tabItem { Label("Profile", systemImage: "person") }
+            .tag(AppTab.profile)
         }
         .tint(Color.cremaCopper)
         .onAppear { configureTabBar() }

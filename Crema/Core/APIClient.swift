@@ -12,12 +12,15 @@ import Supabase
 
 enum APIError: LocalizedError {
     case invalidResponse
+    case unauthenticated
     case httpError(statusCode: Int, message: String?)
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
             return "Invalid server response."
+        case .unauthenticated:
+            return "No active session."
         case .httpError(let code, let message):
             return message ?? "Server error (HTTP \(code))."
         }
@@ -112,9 +115,12 @@ final class APIClient {
             req.httpBody = body
         }
 
-        // Attach the Supabase JWT. Throws if there is no valid session so we
-        // never send an unauthenticated request to a protected endpoint.
-        let token = try await supabase.auth.session.accessToken
+        // Attach the Supabase JWT. If there is no active session (e.g. sign-out
+        // is in progress) bail with unauthenticated rather than surfacing an
+        // AuthError deep inside a view-model catch block.
+        guard let token = supabase.auth.currentSession?.accessToken else {
+            throw APIError.unauthenticated
+        }
         print("[APIClient] \(method) \(req.url?.absoluteString ?? "?") alg=\(jwtAlgorithm(token)) sub=\(jwtSubject(token))")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 

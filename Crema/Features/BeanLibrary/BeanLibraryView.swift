@@ -23,6 +23,7 @@ final class BeanLibraryViewModel {
         isLoading = true
         error = nil
         do { beans = try await repo.fetchBeans() }
+        catch APIError.unauthenticated { /* sign-out in progress, ContentView routes to AuthView */ }
         catch { self.error = error.localizedDescription }
         isLoading = false
     }
