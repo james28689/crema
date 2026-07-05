@@ -93,29 +93,34 @@ struct BeanDetailView: View {
     private var beanHeader: some View {
         VStack(alignment: .leading, spacing: 0) {
             CremaBackButton { dismiss() }
+                .padding(.leading, 16)
+                .padding(.top, 16)
                 .padding(.bottom, 14)
 
-            if let roaster = bean.roaster {
-                Text(roaster)
-                    .font(.cremaMono(size: 9))
-                    .tracking(0.08 * 9)
-                    .foregroundStyle(Color.cremaTextSecondary)
-                    .padding(.bottom, 4)
-            }
+            VStack(alignment: .leading, spacing: 0) {
+                if let roaster = bean.roaster {
+                    Text(roaster)
+                        .font(.cremaMono(size: 9))
+                        .tracking(0.08 * 9)
+                        .foregroundStyle(Color.cremaTextSecondary)
+                        .padding(.bottom, 4)
+                }
 
-            Text(bean.name)
-                .font(.cremaDisplay(size: 24))
-                .foregroundStyle(Color.cremaTextPrimary)
+                Text(bean.name)
+                    .font(.cremaDisplay(size: 24))
+                    .foregroundStyle(Color.cremaTextPrimary)
 
-            HStack(spacing: 6) {
-                if let origin = bean.origin { CremaPillTag(label: origin) }
-                if let process = bean.process { CremaPillTag(label: process.displayName) }
-                if let roastLevel = bean.roastLevel { CremaPillTag(label: roastLevel.displayName) }
+                HStack(spacing: 6) {
+                    if let origin = bean.origin { CremaPillTag(label: origin) }
+                    if let process = bean.process { CremaPillTag(label: process.displayName) }
+                    if let roastLevel = bean.roastLevel { CremaPillTag(label: roastLevel.displayName) }
+                }
+                .padding(.top, 10)
             }
-            .padding(.top, 10)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 16)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statsCard: some View {
@@ -128,17 +133,12 @@ struct BeanDetailView: View {
             statDivider
             CremaStatBlock(label: "avg ★", value: avgRating)
         }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 8)
+        .padding(.vertical, 10)
         .background(Color.cremaBgSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.cremaBorder, lineWidth: 0.5))
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
     }
 
     private var statDivider: some View {
-        Rectangle().fill(Color.cremaBorder).frame(width: 0.5)
+        Rectangle().fill(Color.cremaBorder).frame(width: 0.5, height: 28)
     }
 
     private var shotHistoryHeader: some View {
@@ -235,13 +235,6 @@ private struct ShotHistoryRow: View {
                 CremaStarRating(value: shot.rating)
             }
 
-            HStack(spacing: 4) {
-                Text(ratio)
-                    .font(.cremaMono(size: 10))
-                    .tracking(0.06 * 10)
-                    .foregroundStyle(Color.cremaCopper)
-            }
-
             if let notes = shot.notes, !notes.isEmpty {
                 Text("\u{201C}\(notes)\u{201D}")
                     .font(.cremaBody(size: 12))
@@ -249,10 +242,19 @@ private struct ShotHistoryRow: View {
                     .lineSpacing(3)
             }
 
-            Text(shot.pulledAt.formatted(date: .abbreviated, time: .shortened))
-                .font(.cremaMono(size: 8))
-                .tracking(0.08 * 8)
-                .foregroundStyle(Color.cremaTextSecondary.opacity(0.7))
+            HStack(spacing: 0) {
+                Text(ratio)
+                    .font(.cremaMono(size: 9))
+                    .tracking(0.06 * 9)
+                    .foregroundStyle(Color.cremaCopper)
+                Text("  ·  ")
+                    .font(.cremaMono(size: 9))
+                    .foregroundStyle(Color.cremaTextSecondary.opacity(0.5))
+                Text(shot.pulledAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.cremaMono(size: 9))
+                    .tracking(0.06 * 9)
+                    .foregroundStyle(Color.cremaTextSecondary.opacity(0.7))
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)

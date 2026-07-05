@@ -15,36 +15,21 @@ struct MainTabView: View {
             NavigationStack {
                 BeanLibraryView()
             }
-            .tabItem { Label("Beans", systemImage: "leaf") }
+            .tabItem { Label("Beans", image: "CoffeeBean") }
             .tag(AppTab.beans)
 
             NavigationStack {
                 ShotListView()
             }
-            .tabItem { Label("Shots", systemImage: "timer") }
+            .tabItem { Label("Shots", systemImage: "cup.and.saucer.fill") }
             .tag(AppTab.shots)
 
             HomeView()
-            .tabItem { Label("Profile", systemImage: "person") }
-            .tag(AppTab.profile)
+                .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
+                .tag(AppTab.profile)
         }
         .tint(Color.cremaCopper)
-        .onAppear { configureTabBar() }
-    }
-
-    private func configureTabBar() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color.cremaBgSurface)
-        appearance.shadowColor = UIColor(Color.cremaBorder)
-
-        let monoFont = UIFont.monospacedSystemFont(ofSize: 9, weight: .medium)
-        let inactive: [NSAttributedString.Key: Any] = [.font: monoFont, .foregroundColor: UIColor(Color.cremaTextSecondary)]
-        let active:   [NSAttributedString.Key: Any] = [.font: monoFont, .foregroundColor: UIColor(Color.cremaCopper)]
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes   = inactive
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = active
-
-        UITabBar.appearance().standardAppearance   = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
+        .toolbarBackground(Color.cremaBgSurface, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 }

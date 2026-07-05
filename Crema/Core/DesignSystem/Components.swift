@@ -70,14 +70,14 @@ struct CremaStatBlock: View {
     var unit: String = ""
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 3) {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(value)
-                    .font(.cremaDisplay(size: 22))
+                    .font(.cremaDisplay(size: 18))
                     .foregroundStyle(Color.cremaTextPrimary)
                 if !unit.isEmpty {
                     Text(unit)
-                        .font(.cremaBody(size: 11))
+                        .font(.cremaBody(size: 10))
                         .foregroundStyle(Color.cremaTextSecondary)
                 }
             }

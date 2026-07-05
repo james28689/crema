@@ -55,7 +55,7 @@ struct ShotListView: View {
     @State private var refreshID = UUID()
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
+        ZStack {
             Color.cremaBgPrimary.ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -63,8 +63,6 @@ struct ShotListView: View {
                 CremaDivider()
                 content
             }
-
-            fab
         }
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showLogShot) {
@@ -82,7 +80,7 @@ struct ShotListView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .center, spacing: 12) {
             Text("Shot Log")
                 .font(.cremaDisplay(size: 28))
                 .foregroundStyle(Color.cremaTextPrimary)
@@ -91,6 +89,7 @@ struct ShotListView: View {
                 .font(.cremaMono(size: 9))
                 .tracking(0.08 * 9)
                 .foregroundStyle(Color.cremaTextSecondary)
+            addButton
         }
         .padding(.horizontal, 24)
         .padding(.top, 20)
@@ -142,18 +141,15 @@ struct ShotListView: View {
         }
     }
 
-    private var fab: some View {
+    private var addButton: some View {
         Button { showLogShot = true } label: {
             Image(systemName: "plus")
-                .font(.system(size: 20, weight: .regular))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(Color.cremaBgPrimary)
-                .frame(width: 52, height: 52)
+                .frame(width: 30, height: 30)
                 .background(Color.cremaCopper)
                 .clipShape(Circle())
-                .shadow(color: Color.cremaCopper.opacity(0.45), radius: 12, x: 0, y: 4)
         }
-        .padding(.trailing, 20)
-        .padding(.bottom, 20)
     }
 }
 
