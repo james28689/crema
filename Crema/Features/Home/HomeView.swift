@@ -2,8 +2,6 @@
 //  HomeView.swift
 //  Crema
 //
-//  Created by James Watling on 25/05/2026.
-//
 
 import SwiftUI
 import Supabase
@@ -13,52 +11,28 @@ struct HomeView: View {
     @State private var signOutError: String?
 
     var body: some View {
-        ZStack {
-            Color.cremaBgPrimary.ignoresSafeArea()
-
-            VStack(spacing: 32) {
-                Spacer()
-
-                // Wordmark
-                Text("Crema")
-                    .font(.cremaDisplay(size: 48))
-                    .foregroundStyle(Color.cremaCopper)
-                    .kerning(-0.02 * 48)
-
-                // Signed-in proof
-                VStack(spacing: 6) {
-                    Text("SIGNED IN AS")
-                        .font(.cremaMono(size: 9))
-                        .foregroundStyle(Color.cremaTextSecondary)
-                        .textCase(.uppercase)
-                        .tracking(0.08 * 9)
-
+        Form {
+            Section {
+                LabeledContent("Email") {
                     Text(appState.session?.user.email ?? "—")
-                        .font(.cremaBody(size: 14))
-                        .foregroundStyle(Color.cremaTextPrimary)
+                        .font(.cremaBody(size: 16))
+                        .foregroundStyle(Color.cremaTextSecondary)
+                        .multilineTextAlignment(.trailing)
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 14)
-                .background(Color.cremaBgSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.cremaBorder, lineWidth: 0.5)
-                )
+            }
+            .listRowBackground(Color.cremaBgSurface)
 
-                Spacer()
-
-                // Sign-out error
-                if let error = signOutError {
+            if let error = signOutError {
+                Section {
                     Text(error)
-                        .font(.cremaBody(size: 12))
+                        .font(.cremaBody(size: 14))
                         .foregroundStyle(Color.cremaError)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
                 }
+                .listRowBackground(Color.cremaBgSurface)
+            }
 
-                // Sign out
-                Button {
+            Section {
+                Button(role: .destructive) {
                     signOutError = nil
                     Task {
                         do {
@@ -68,22 +42,24 @@ struct HomeView: View {
                         }
                     }
                 } label: {
-                    Text("sign out")
-                        .font(.cremaBody(size: 14, weight: .medium))
-                        .foregroundStyle(Color.cremaBgPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.cremaCopper)
-                        .clipShape(Capsule())
+                    Text("Sign Out")
+                        .font(.cremaBody(size: 17, weight: .medium))
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 36)
             }
+            .listRowBackground(Color.cremaBgSurface)
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.cremaBgPrimary.ignoresSafeArea())
+        .navigationTitle("Profile")
+        .navigationBarTitleDisplayMode(.large)
+        .tint(Color.cremaCopper)
     }
 }
 
 #Preview {
-    HomeView()
-        .environment(AppState())
+    NavigationStack {
+        HomeView()
+            .environment(AppState())
+    }
 }

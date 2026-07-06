@@ -43,7 +43,6 @@ struct BeanDetailView: View {
     let bean: Bean
     let onLogShot: (Bean) -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var viewModel = BeanDetailViewModel()
     @State private var refreshID = UUID()
 
@@ -66,20 +65,46 @@ struct BeanDetailView: View {
     }
 
     var body: some View {
-        ZStack {
-            Color.cremaBgPrimary.ignoresSafeArea()
+        List {
+            beanSubheader
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.cremaBgPrimary)
 
-            VStack(spacing: 0) {
-                beanHeader
-                CremaDivider()
-                statsCard
-                CremaDivider()
-                shotHistoryHeader
-                CremaDivider()
-                shotList
+            CremaDivider()
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.cremaBgPrimary)
+
+            statsCard
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.cremaBgSurface)
+
+            CremaDivider()
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.cremaBgPrimary)
+
+            shotRows
+        }
+        .listStyle(.plain)
+        .environment(\.defaultMinListRowHeight, 0)
+        .scrollContentBackground(.hidden)
+        .background(Color.cremaBgPrimary)
+        .refreshable { await viewModel.load(beanId: bean.id) }
+        .navigationTitle(bean.name)
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    onLogShot(bean)
+                } label: {
+                    Label("Log Shot", systemImage: "plus")
+                        .fontWeight(.semibold)
+                }
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
         .task(id: refreshID) { await viewModel.load(beanId: bean.id) }
         .alert("Error", isPresented: .constant(viewModel.error != nil)) {
             Button("OK") { viewModel.error = nil }
@@ -90,42 +115,28 @@ struct BeanDetailView: View {
 
     // MARK: Sub-views
 
-    private var beanHeader: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            CremaBackButton { dismiss() }
-                .padding(.leading, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 14)
-
-            VStack(alignment: .leading, spacing: 0) {
-                if let roaster = bean.roaster {
-                    Text(roaster)
-                        .font(.cremaMono(size: 9))
-                        .tracking(0.08 * 9)
-                        .foregroundStyle(Color.cremaTextSecondary)
-                        .padding(.bottom, 4)
-                }
-
-                Text(bean.name)
-                    .font(.cremaDisplay(size: 24))
-                    .foregroundStyle(Color.cremaTextPrimary)
-
-                HStack(spacing: 6) {
-                    if let origin = bean.origin { CremaPillTag(label: origin) }
-                    if let process = bean.process { CremaPillTag(label: process.displayName) }
-                    if let roastLevel = bean.roastLevel { CremaPillTag(label: roastLevel.displayName) }
-                }
-                .padding(.top, 10)
+    private var beanSubheader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let roaster = bean.roaster {
+                Text(roaster)
+                    .font(.cremaMono(size: 11))
+                    .tracking(0.08 * 11)
+                    .foregroundStyle(Color.cremaTextSecondary)
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 16)
+            HStack(spacing: 6) {
+                if let origin = bean.origin { CremaPillTag(label: origin) }
+                if let process = bean.process { CremaPillTag(label: process.displayName) }
+                if let roastLevel = bean.roastLevel { CremaPillTag(label: roastLevel.displayName) }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
 
     private var statsCard: some View {
         HStack(spacing: 0) {
-            CremaStatBlock(label: "shots", value: "\(viewModel.shots.count)")
+            CremaStatBlock(label: viewModel.shots.count == 1 ? "shot" : "shots", value: "\(viewModel.shots.count)")
             statDivider
             CremaStatBlock(label: "avg yield", value: avgYield, unit: "g")
             statDivider
@@ -133,7 +144,7 @@ struct BeanDetailView: View {
             statDivider
             CremaStatBlock(label: "avg ★", value: avgRating)
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
         .background(Color.cremaBgSurface)
     }
 
@@ -141,146 +152,41 @@ struct BeanDetailView: View {
         Rectangle().fill(Color.cremaBorder).frame(width: 0.5, height: 28)
     }
 
-    private var shotHistoryHeader: some View {
-        HStack {
-            Text("shot history")
-                .font(.cremaMono(size: 9))
-                .tracking(0.08 * 9)
-                .foregroundStyle(Color.cremaTextSecondary)
-            Spacer()
-            Button {
-                onLogShot(bean)
-            } label: {
-                Text("+ log shot")
-                    .font(.cremaBody(size: 12, weight: .medium))
-                    .foregroundStyle(Color.cremaBgPrimary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .background(Color.cremaCopper)
-                    .clipShape(Capsule())
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-    }
-
     @ViewBuilder
-    private var shotList: some View {
+    private var shotRows: some View {
         if viewModel.isLoading && viewModel.shots.isEmpty {
-            Spacer()
-            ProgressView().tint(Color.cremaCopper)
-            Spacer()
-        } else if viewModel.shots.isEmpty {
-            VStack {
+            HStack {
                 Spacer()
-                Text("No shots logged yet.")
-                    .font(.cremaBody(size: 13))
-                    .foregroundStyle(Color.cremaTextSecondary)
-                Text("Tap + log shot to start.")
-                    .font(.cremaBody(size: 12))
-                    .foregroundStyle(Color.cremaTextSecondary.opacity(0.6))
+                ProgressView().tint(Color.cremaCopper)
                 Spacer()
             }
+            .padding(.vertical, 40)
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.cremaBgPrimary)
+        } else if viewModel.shots.isEmpty {
+            ContentUnavailableView(
+                "No Shots Yet",
+                systemImage: "cup.and.saucer",
+                description: Text("Tap + to log your first shot with this bean.")
+            )
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.cremaBgPrimary)
         } else {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(Array(viewModel.shots.enumerated()), id: \.element.id) { idx, shot in
-                        ShotHistoryRow(shot: shot)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    Task { await viewModel.delete(shot) }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-
-                        if idx < viewModel.shots.count - 1 {
-                            CremaDivider(inset: 24)
+            ForEach(viewModel.shots) { shot in
+                ShotRow(shot: shot)
+                    .listRowBackground(Color.cremaBgPrimary)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowSeparatorTint(Color.cremaBorder)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            Task { await viewModel.delete(shot) }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
                         }
                     }
-                }
-                .padding(.bottom, 32)
-            }
-            .refreshable { await viewModel.load(beanId: bean.id) }
-        }
-    }
-}
-
-// MARK: - Shot history row
-
-private struct ShotHistoryRow: View {
-    let shot: Shot
-
-    private var ratio: String {
-        guard shot.doseG > 0 else { return "—" }
-        return String(format: "1:%.2f", shot.yieldG / shot.doseG)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                // Metrics
-                HStack(spacing: 0) {
-                    metricCell(label: "dose", value: String(format: "%.1f", shot.doseG), unit: "g")
-                    metricDivider
-                    metricCell(label: "yield", value: String(format: "%.1f", shot.yieldG), unit: "g")
-                    metricDivider
-                    metricCell(label: "time", value: "\(shot.timeSec)", unit: "s")
-                    if let grind = shot.grinderSetting {
-                        metricDivider
-                        metricCell(label: "grind", value: grind, unit: "")
-                    }
-                }
-                Spacer()
-                CremaStarRating(value: shot.rating)
-            }
-
-            if let notes = shot.notes, !notes.isEmpty {
-                Text("\u{201C}\(notes)\u{201D}")
-                    .font(.cremaBody(size: 12))
-                    .foregroundStyle(Color.cremaTextSecondary)
-                    .lineSpacing(3)
-            }
-
-            HStack(spacing: 0) {
-                Text(ratio)
-                    .font(.cremaMono(size: 9))
-                    .tracking(0.06 * 9)
-                    .foregroundStyle(Color.cremaCopper)
-                Text("  ·  ")
-                    .font(.cremaMono(size: 9))
-                    .foregroundStyle(Color.cremaTextSecondary.opacity(0.5))
-                Text(shot.pulledAt.formatted(date: .abbreviated, time: .shortened))
-                    .font(.cremaMono(size: 9))
-                    .tracking(0.06 * 9)
-                    .foregroundStyle(Color.cremaTextSecondary.opacity(0.7))
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 14)
-    }
-
-    private func metricCell(label: String, value: String, unit: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.cremaMono(size: 8))
-                .tracking(0.08 * 8)
-                .foregroundStyle(Color.cremaTextSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(value)
-                    .font(.cremaDisplay(size: 18))
-                    .foregroundStyle(Color.cremaTextPrimary)
-                if !unit.isEmpty {
-                    Text(unit)
-                        .font(.cremaBody(size: 10))
-                        .foregroundStyle(Color.cremaTextSecondary)
-                }
-            }
-        }
-        .padding(.horizontal, 10)
-    }
-
-    private var metricDivider: some View {
-        Rectangle().fill(Color.cremaBorder).frame(width: 0.5).padding(.vertical, 4)
     }
 }

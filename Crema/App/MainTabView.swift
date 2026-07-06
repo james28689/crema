@@ -27,7 +27,9 @@ struct MainTabView: View {
             }
 
             Tab("Profile", systemImage: "person.crop.circle.fill", value: AppTab.profile) {
-                HomeView()
+                NavigationStack {
+                    HomeView()
+                }
             }
         }
         .tint(Color.cremaCopper)

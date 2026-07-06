@@ -14,8 +14,8 @@ struct CremaPillTag: View {
 
     var body: some View {
         Text(label)
-            .font(.cremaMono(size: 9))
-            .tracking(0.06 * 9)
+            .font(.cremaMono(size: 11))
+            .tracking(0.06 * 11)
             .foregroundStyle(Color.cremaTextSecondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -35,29 +35,11 @@ struct CremaStarRating: View {
         HStack(spacing: 4) {
             ForEach(1...5, id: \.self) { n in
                 Image(systemName: n <= value ? "star.fill" : "star")
-                    .font(.system(size: 13, weight: .light))
+                    .font(.system(size: 16, weight: .light))
                     .foregroundStyle(n <= value ? Color.cremaCopper : Color.cremaBorder)
                     .contentShape(Rectangle())
                     .onTapGesture { onChange?(n) }
             }
-        }
-    }
-}
-
-// MARK: - Back button
-
-struct CremaBackButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.left")
-                    .font(.system(size: 13, weight: .light))
-                Text("back")
-                    .font(.cremaBody(size: 13))
-            }
-            .foregroundStyle(Color.cremaTextSecondary)
         }
     }
 }
@@ -73,20 +55,105 @@ struct CremaStatBlock: View {
         VStack(spacing: 3) {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(value)
-                    .font(.cremaDisplay(size: 18))
+                    .font(.cremaDisplay(size: 20))
                     .foregroundStyle(Color.cremaTextPrimary)
                 if !unit.isEmpty {
                     Text(unit)
-                        .font(.cremaBody(size: 10))
+                        .font(.cremaBody(size: 12))
                         .foregroundStyle(Color.cremaTextSecondary)
                 }
             }
             Text(label)
-                .font(.cremaMono(size: 8))
-                .tracking(0.08 * 8)
+                .font(.cremaMono(size: 11))
+                .tracking(0.08 * 11)
                 .foregroundStyle(Color.cremaTextSecondary)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Shot row
+
+/// A single shot entry — used by both the Shots tab (all shots, with the bean
+/// name shown) and a bean's detail screen (shot history, name omitted since
+/// the screen title already gives that context).
+struct ShotRow: View {
+    let shot: Shot
+    var beanName: String? = nil
+
+    private var ratio: String {
+        guard shot.doseG > 0 else { return "—" }
+        return String(format: "1:%.2f", shot.yieldG / shot.doseG)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    if let beanName {
+                        Text(beanName)
+                            .font(.cremaBody(size: 17, weight: .medium))
+                            .foregroundStyle(Color.cremaTextPrimary)
+                    }
+                    Text(shot.pulledAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.cremaMono(size: 11))
+                        .tracking(0.08 * 11)
+                        .foregroundStyle(Color.cremaTextSecondary)
+                }
+                Spacer(minLength: 8)
+                CremaStarRating(value: shot.rating)
+            }
+
+            HStack(alignment: .top, spacing: 8) {
+                metricCell(label: "dose", value: String(format: "%.1f", shot.doseG), unit: "g")
+                metricDivider
+                metricCell(label: "yield", value: String(format: "%.1f", shot.yieldG), unit: "g")
+                metricDivider
+                metricCell(label: "time", value: "\(shot.timeSec)", unit: "s")
+                if let grind = shot.grinderSetting {
+                    metricDivider
+                    metricCell(label: "grind", value: grind, unit: "")
+                }
+                metricDivider
+                metricCell(label: "ratio", value: ratio, unit: "", valueColor: Color.cremaCopper)
+            }
+
+            if let notes = shot.notes, !notes.isEmpty {
+                Text("\u{201C}\(notes)\u{201D}")
+                    .font(.cremaBody(size: 14))
+                    .foregroundStyle(Color.cremaTextSecondary)
+                    .lineSpacing(3)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+    }
+
+    private func metricCell(label: String, value: String, unit: String, valueColor: Color = Color.cremaTextPrimary) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.cremaMono(size: 11))
+                .tracking(0.08 * 11)
+                .foregroundStyle(Color.cremaTextSecondary)
+                .lineLimit(1)
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text(value)
+                    .font(.cremaDisplay(size: 20))
+                    .foregroundStyle(valueColor)
+                    .lineLimit(1)
+                if !unit.isEmpty {
+                    Text(unit)
+                        .font(.cremaBody(size: 12))
+                        .foregroundStyle(Color.cremaTextSecondary)
+                        .lineLimit(1)
+                }
+            }
+            .fixedSize()
+        }
+    }
+
+    private var metricDivider: some View {
+        Rectangle().fill(Color.cremaBorder).frame(width: 0.5).padding(.vertical, 4)
     }
 }
 
@@ -117,7 +184,7 @@ struct CremaPrimaryButton: View {
                 if isLoading {
                     ProgressView().tint(Color.cremaBgPrimary)
                 } else {
-                    Text(label).font(.cremaBody(size: 14, weight: .medium))
+                    Text(label).font(.cremaBody(size: 17, weight: .medium))
                 }
             }
             .frame(maxWidth: .infinity)
@@ -130,34 +197,5 @@ struct CremaPrimaryButton: View {
         .opacity(isLoading ? 0.8 : 1)
         .animation(.easeInOut(duration: 0.15), value: isLoading)
         .animation(.easeInOut(duration: 0.15), value: isEnabled)
-    }
-}
-
-// MARK: - Segmented pill picker
-
-struct CremaSegmentedPicker<T: Hashable>: View {
-    let options: [T]
-    let label: (T) -> String
-    @Binding var selection: T
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(options, id: \.self) { opt in
-                    let isSelected = selection == opt
-                    Button { selection = opt } label: {
-                        Text(label(opt))
-                            .font(.cremaBody(size: 12))
-                            .foregroundStyle(isSelected ? Color.cremaBgPrimary : Color.cremaTextSecondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(isSelected ? Color.cremaCopper : Color.clear)
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(isSelected ? Color.cremaCopper : Color.cremaBorder, lineWidth: 0.5))
-                    }
-                    .animation(.easeInOut(duration: 0.15), value: isSelected)
-                }
-            }
-        }
     }
 }

@@ -20,15 +20,24 @@ struct LogShotView: View {
     var body: some View {
         switch step {
         case .form:
-            LogShotFormView(
-                initialBean: selectedBean ?? initialBean,
-                onDismiss: onDismiss,
-                onLogged: { bean, shot in
-                    selectedBean = bean
-                    lastShot = shot
-                    withAnimation(.easeInOut(duration: 0.25)) { step = .confirmed }
+            NavigationStack {
+                LogShotFormView(
+                    initialBean: selectedBean ?? initialBean,
+                    onLogged: { bean, shot in
+                        selectedBean = bean
+                        lastShot = shot
+                        withAnimation(.easeInOut(duration: 0.25)) { step = .confirmed }
+                    }
+                )
+                .navigationTitle("Log Shot")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", action: onDismiss)
+                    }
                 }
-            )
+            }
+            .tint(Color.cremaCopper)
         case .confirmed:
             ShotConfirmedView(
                 bean: selectedBean ?? initialBean,
@@ -46,7 +55,6 @@ struct LogShotView: View {
 
 private struct LogShotFormView: View {
     let initialBean: Bean?
-    let onDismiss: () -> Void
     let onLogged: (Bean?, Shot) -> Void
 
     @State private var selectedBean: Bean?
@@ -84,38 +92,27 @@ private struct LogShotFormView: View {
         ZStack {
             Color.cremaBgPrimary.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                formHeader
-                CremaDivider()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        ratioCard
-                        measurementRow(
-                            ("dose", $dose, "g", .decimalPad, Field.dose, Field.yield),
-                            ("yield", $yield, "g", .decimalPad, Field.yield, Field.time)
-                        )
-                        measurementRow(
-                            ("time", $time, "s", .numberPad, Field.time, Field.grind),
-                            ("grind", $grinderSetting, "setting", .default, Field.grind, Field.notes)
-                        )
-                        ratingRow
-                        notesField
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 20)
-                    .padding(.bottom, 120)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    beanRow
+                    ratioCard
+                    measurementRow(
+                        ("dose", $dose, "g", .decimalPad, Field.dose, Field.yield),
+                        ("yield", $yield, "g", .decimalPad, Field.yield, Field.time)
+                    )
+                    measurementRow(
+                        ("time", $time, "s", .numberPad, Field.time, Field.grind),
+                        ("grind", $grinderSetting, "setting", .default, Field.grind, Field.notes)
+                    )
+                    ratingRow
+                    notesField
                 }
-                .scrollBounceBehavior(.basedOnSize)
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") { focused = nil }
-                            .font(.cremaBody(size: 14, weight: .medium))
-                            .foregroundStyle(Color.cremaCopper)
-                    }
-                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 20)
+                .padding(.bottom, 120)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
 
             // Footer
             VStack(spacing: 0) {
@@ -123,7 +120,7 @@ private struct LogShotFormView: View {
                 VStack(spacing: 12) {
                     if let err = error {
                         Text(err)
-                            .font(.cremaBody(size: 12))
+                            .font(.cremaBody(size: 14))
                             .foregroundStyle(Color.cremaError)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -134,7 +131,7 @@ private struct LogShotFormView: View {
                         action: save
                     )
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 20)
                 .padding(.top, 12)
                 .padding(.bottom, 32)
                 .background(
@@ -150,64 +147,53 @@ private struct LogShotFormView: View {
 
     // MARK: Sub-views
 
-    private var formHeader: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 0) {
-                CremaBackButton { onDismiss() }
-                    .padding(.bottom, 14)
-
-                Text("log shot")
-                    .font(.cremaMono(size: 9))
-                    .tracking(0.08 * 9)
-                    .foregroundStyle(Color.cremaTextSecondary)
-                    .padding(.bottom, 3)
-
-                if let bean = activeBean {
-                    Text(bean.name)
-                        .font(.cremaDisplay(size: 22))
-                        .foregroundStyle(Color.cremaTextPrimary)
-                    if let roaster = bean.roaster {
-                        Text(roaster)
-                            .font(.cremaBody(size: 12))
-                            .foregroundStyle(Color.cremaTextSecondary)
-                            .padding(.top, 1)
-                    }
-                } else {
-                    Button { showBeanPicker = true } label: {
-                        HStack(spacing: 4) {
-                            Text("Select Bean")
-                                .font(.cremaDisplay(size: 22))
-                                .foregroundStyle(Color.cremaCopper)
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 13, weight: .light))
-                                .foregroundStyle(Color.cremaCopper)
-                        }
-                    }
-                }
-            }
-            Spacer()
-            if activeBean != nil && initialBean == nil {
-                Button { showBeanPicker = true } label: {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 14, weight: .light))
+    private var beanRow: some View {
+        Button { showBeanPicker = true } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("bean")
+                        .font(.cremaMono(size: 11))
+                        .tracking(0.08 * 11)
                         .foregroundStyle(Color.cremaTextSecondary)
+                        .textCase(.uppercase)
+                    if let bean = activeBean {
+                        Text(bean.name)
+                            .font(.cremaBody(size: 17, weight: .medium))
+                            .foregroundStyle(Color.cremaTextPrimary)
+                        if let roaster = bean.roaster {
+                            Text(roaster)
+                                .font(.cremaBody(size: 14))
+                                .foregroundStyle(Color.cremaTextSecondary)
+                        }
+                    } else {
+                        Text("Select a bean…")
+                            .font(.cremaBody(size: 17))
+                            .foregroundStyle(Color.cremaCopper)
+                    }
                 }
-                .padding(.top, 4)
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 13, weight: .light))
+                    .foregroundStyle(Color.cremaTextSecondary)
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(Color.cremaInputBg)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.cremaBorder, lineWidth: 0.5))
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .buttonStyle(.plain)
     }
 
     private var ratioCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("ratio")
-                    .font(.cremaMono(size: 9))
-                    .tracking(0.08 * 9)
+                    .font(.cremaMono(size: 11))
+                    .tracking(0.08 * 11)
                     .foregroundStyle(Color.cremaTextSecondary)
                 Text(ratio ?? "—")
-                    .font(.cremaDisplay(size: 22))
+                    .font(.cremaDisplay(size: 24))
                     .foregroundStyle(Color.cremaCopper)
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.15), value: ratio)
@@ -242,16 +228,16 @@ private struct LogShotFormView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(label)
-                    .font(.cremaMono(size: 9))
-                    .tracking(0.08 * 9)
+                    .font(.cremaMono(size: 11))
+                    .tracking(0.08 * 11)
                     .foregroundStyle(Color.cremaTextSecondary)
                     .textCase(.uppercase)
                 Text("(\(unit))")
-                    .font(.cremaMono(size: 8))
+                    .font(.cremaMono(size: 10))
                     .foregroundStyle(Color.cremaTextSecondary.opacity(0.7))
             }
             TextField("—", text: text)
-                .font(.cremaBody(size: 14))
+                .font(.cremaBody(size: 16))
                 .foregroundStyle(Color.cremaTextPrimary)
                 .multilineTextAlignment(.center)
                 .keyboardType(keyboard)
@@ -278,15 +264,15 @@ private struct LogShotFormView: View {
     private var ratingRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("rating")
-                .font(.cremaMono(size: 9))
-                .tracking(0.08 * 9)
+                .font(.cremaMono(size: 11))
+                .tracking(0.08 * 11)
                 .foregroundStyle(Color.cremaTextSecondary)
                 .textCase(.uppercase)
             HStack(spacing: 12) {
                 CremaStarRating(value: rating) { n in rating = n }
                 Text(ratingLabel)
-                    .font(.cremaMono(size: 10))
-                    .tracking(0.06 * 10)
+                    .font(.cremaMono(size: 11))
+                    .tracking(0.06 * 11)
                     .foregroundStyle(Color.cremaTextSecondary)
                     .animation(.easeInOut(duration: 0.1), value: rating)
             }
@@ -296,20 +282,20 @@ private struct LogShotFormView: View {
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("tasting notes")
-                .font(.cremaMono(size: 9))
-                .tracking(0.08 * 9)
+                .font(.cremaMono(size: 11))
+                .tracking(0.08 * 11)
                 .foregroundStyle(Color.cremaTextSecondary)
                 .textCase(.uppercase)
             ZStack(alignment: .topLeading) {
                 if notes.isEmpty {
                     Text("Describe the shot — acidity, body, finish…")
-                        .font(.cremaBody(size: 14))
+                        .font(.cremaBody(size: 16))
                         .foregroundStyle(Color.cremaTextSecondary.opacity(0.6))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 12)
                 }
                 TextEditor(text: $notes)
-                    .font(.cremaBody(size: 14))
+                    .font(.cremaBody(size: 16))
                     .foregroundStyle(Color.cremaTextPrimary)
                     .focused($focused, equals: .notes)
                     .tint(Color.cremaCopper)
@@ -367,66 +353,54 @@ private struct BeanPickerSheet: View {
     private let repo: BeanRepositoryProtocol = BeanRepository()
 
     var body: some View {
-        ZStack {
-            Color.cremaBgPrimary.ignoresSafeArea()
-            VStack(spacing: 0) {
-                HStack {
-                    Text("Select Bean")
-                        .font(.cremaDisplay(size: 22))
-                        .foregroundStyle(Color.cremaTextPrimary)
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .light))
-                            .foregroundStyle(Color.cremaTextSecondary)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 24)
-                .padding(.bottom, 16)
-
-                CremaDivider()
-
+        NavigationStack {
+            Group {
                 if isLoading {
-                    Spacer()
                     ProgressView().tint(Color.cremaCopper)
-                    Spacer()
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(Array(beans.enumerated()), id: \.element.id) { idx, bean in
-                                Button {
-                                    selected = bean
-                                    dismiss()
-                                } label: {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(bean.name)
-                                                .font(.cremaBody(size: 15, weight: .medium))
-                                                .foregroundStyle(Color.cremaTextPrimary)
-                                            if let roaster = bean.roaster {
-                                                Text(roaster)
-                                                    .font(.cremaBody(size: 12))
-                                                    .foregroundStyle(Color.cremaTextSecondary)
-                                            }
-                                        }
-                                        Spacer()
-                                        if selected?.id == bean.id {
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 13, weight: .medium))
-                                                .foregroundStyle(Color.cremaCopper)
+                    List {
+                        ForEach(beans) { bean in
+                            Button {
+                                selected = bean
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(bean.name)
+                                            .font(.cremaBody(size: 17, weight: .medium))
+                                            .foregroundStyle(Color.cremaTextPrimary)
+                                        if let roaster = bean.roaster {
+                                            Text(roaster)
+                                                .font(.cremaBody(size: 14))
+                                                .foregroundStyle(Color.cremaTextSecondary)
                                         }
                                     }
-                                    .padding(.horizontal, 24)
-                                    .padding(.vertical, 14)
+                                    Spacer()
+                                    if selected?.id == bean.id {
+                                        Image(systemName: "checkmark")
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(Color.cremaCopper)
+                                    }
                                 }
-                                if idx < beans.count - 1 { CremaDivider(inset: 24) }
                             }
+                            .listRowBackground(Color.cremaBgPrimary)
+                            .listRowSeparatorTint(Color.cremaBorder)
                         }
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.cremaBgPrimary.ignoresSafeArea())
+                }
+            }
+            .navigationTitle("Select Bean")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
                 }
             }
         }
+        .tint(Color.cremaCopper)
         .task {
             isLoading = true
             beans = (try? await repo.fetchBeans()) ?? []
@@ -455,7 +429,6 @@ private struct ShotConfirmedView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                // Check circle
                 ZStack {
                     Circle()
                         .fill(Color.cremaBgSurface)
@@ -468,19 +441,18 @@ private struct ShotConfirmedView: View {
                 .padding(.bottom, 20)
 
                 Text("Shot logged")
-                    .font(.cremaDisplay(size: 28))
+                    .font(.cremaDisplay(size: 34))
                     .foregroundStyle(Color.cremaTextPrimary)
                     .padding(.bottom, 6)
 
                 if let bean {
                     Text(bean.name)
-                        .font(.cremaBody(size: 13))
+                        .font(.cremaBody(size: 15))
                         .foregroundStyle(Color.cremaTextSecondary)
                 }
 
                 Spacer()
 
-                // Summary card
                 if let shot {
                     VStack(spacing: 0) {
                         let items: [(String, String, String)] = [
@@ -494,16 +466,16 @@ private struct ShotConfirmedView: View {
                             ForEach(items, id: \.0) { label, value, unit in
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(label)
-                                        .font(.cremaMono(size: 8))
-                                        .tracking(0.08 * 8)
+                                        .font(.cremaMono(size: 11))
+                                        .tracking(0.08 * 11)
                                         .foregroundStyle(Color.cremaTextSecondary)
                                     HStack(alignment: .firstTextBaseline, spacing: 1) {
                                         Text(value)
-                                            .font(.cremaDisplay(size: 20))
+                                            .font(.cremaDisplay(size: 22))
                                             .foregroundStyle(Color.cremaTextPrimary)
                                         if !unit.isEmpty {
                                             Text(unit)
-                                                .font(.cremaBody(size: 11))
+                                                .font(.cremaBody(size: 13))
                                                 .foregroundStyle(Color.cremaTextSecondary)
                                         }
                                     }
@@ -512,8 +484,8 @@ private struct ShotConfirmedView: View {
                             }
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("rating")
-                                    .font(.cremaMono(size: 8))
-                                    .tracking(0.08 * 8)
+                                    .font(.cremaMono(size: 11))
+                                    .tracking(0.08 * 11)
                                     .foregroundStyle(Color.cremaTextSecondary)
                                 CremaStarRating(value: shot.rating)
                             }
@@ -524,16 +496,16 @@ private struct ShotConfirmedView: View {
                     .background(Color.cremaBgSurface)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.cremaBorder, lineWidth: 0.5))
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 20)
                     .padding(.bottom, 32)
                 }
 
                 VStack(spacing: 0) {
                     CremaPrimaryButton(label: "Done", action: onDone)
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 20)
 
                     Button("log another", action: onLogAnother)
-                        .font(.cremaBody(size: 13))
+                        .font(.cremaBody(size: 15))
                         .foregroundStyle(Color.cremaTextSecondary)
                         .padding(.top, 16)
                         .padding(.bottom, 36)

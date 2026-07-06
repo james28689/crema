@@ -91,12 +91,22 @@ extension Font {
 
     /// SF Pro — body copy, captions, button labels.
     /// Default weight is `.light` (300) to match the airy, refined feel of the design.
-    static func cremaBody(size: CGFloat, weight: Font.Weight = .light) -> Font {
+    static func cremaBody(size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .default)
     }
 
     /// SF Mono — ALL CAPS labels, parameter tokens, data values.
     static func cremaMono(size: CGFloat, weight: Font.Weight = .medium) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
+    }
+}
+
+extension UIFont {
+    /// UIKit equivalent of `Font.cremaDisplay`, for styling `UINavigationBar` title attributes.
+    static func cremaDisplay(size: CGFloat) -> UIFont {
+        let weight: UIFont.Weight = size >= 36 ? .regular : .semibold
+        let base = UIFont.systemFont(ofSize: size, weight: weight)
+        guard let descriptor = base.fontDescriptor.withDesign(.serif) else { return base }
+        return UIFont(descriptor: descriptor, size: size)
     }
 }

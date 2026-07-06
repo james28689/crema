@@ -16,9 +16,6 @@ struct AddBeanView: View {
     @State private var roastLevel: RoastLevel = .medium
     @State private var isLoading = false
     @State private var error: String?
-    @FocusState private var focused: Field?
-
-    fileprivate enum Field { case name, roaster, origin }
 
     private var canSave: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -26,122 +23,62 @@ struct AddBeanView: View {
     }
 
     var body: some View {
-        ZStack {
-            Color.cremaBgPrimary.ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                // Header
-                HStack(alignment: .center) {
-                    CremaBackButton { dismiss() }
-                    Spacer()
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Name", text: $name)
+                    TextField("Roaster", text: $roaster)
+                    TextField("Origin", text: $origin)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 12)
+                .listRowBackground(Color.cremaBgSurface)
 
-                Text("Add Bean")
-                    .font(.cremaDisplay(size: 26))
-                    .foregroundStyle(Color.cremaTextPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
-
-                CremaDivider()
-
-                // Form
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        formField(label: "bean name *") {
-                            CremaFormInput(placeholder: "e.g. Ethiopia Yirgacheffe",
-                                          text: $name,
-                                          focused: $focused,
-                                          field: .name)
-                            .submitLabel(.next)
-                            .onSubmit { focused = .roaster }
-                        }
-
-                        formField(label: "roaster *") {
-                            CremaFormInput(placeholder: "e.g. Onyx Coffee Lab",
-                                          text: $roaster,
-                                          focused: $focused,
-                                          field: .roaster)
-                            .submitLabel(.next)
-                            .onSubmit { focused = .origin }
-                        }
-
-                        formField(label: "origin") {
-                            CremaFormInput(placeholder: "e.g. Ethiopia, Colombia, Blend…",
-                                          text: $origin,
-                                          focused: $focused,
-                                          field: .origin)
-                            .submitLabel(.done)
-                            .onSubmit { focused = nil }
-                        }
-
-                        formField(label: "process") {
-                            CremaSegmentedPicker(
-                                options: BeanProcess.allCases,
-                                label: { $0.displayName },
-                                selection: $process
-                            )
-                        }
-
-                        formField(label: "roast level") {
-                            CremaSegmentedPicker(
-                                options: RoastLevel.allCases,
-                                label: { $0.displayName },
-                                selection: $roastLevel
-                            )
+                Section {
+                    Picker("Process", selection: $process) {
+                        ForEach(BeanProcess.allCases, id: \.self) { p in
+                            Text(p.displayName).tag(p)
                         }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 20)
-                    .padding(.bottom, 120)
+                    Picker("Roast Level", selection: $roastLevel) {
+                        ForEach(RoastLevel.allCases, id: \.self) { l in
+                            Text(l.displayName).tag(l)
+                        }
+                    }
                 }
-                .scrollBounceBehavior(.basedOnSize)
-            }
+                .listRowBackground(Color.cremaBgSurface)
 
-            // Footer CTA — floated above scroll
-            VStack(spacing: 0) {
-                Spacer()
-                VStack(spacing: 12) {
-                    if let err = error {
+                if let err = error {
+                    Section {
                         Text(err)
-                            .font(.cremaBody(size: 12))
+                            .font(.cremaBody(size: 14))
                             .foregroundStyle(Color.cremaError)
-                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    CremaPrimaryButton(
-                        label: "Save Bean",
-                        isLoading: isLoading,
-                        isEnabled: canSave,
-                        action: save
-                    )
+                    .listRowBackground(Color.cremaBgSurface)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-                .padding(.bottom, 32)
-                .background(
-                    Color.cremaBgPrimary
-                        .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: -4)
-                )
+            }
+            .scrollContentBackground(.hidden)
+            .background(Color.cremaBgPrimary.ignoresSafeArea())
+            .scrollDismissesKeyboard(.interactively)
+            .navigationTitle("Add Bean")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if isLoading {
+                        ProgressView()
+                    } else {
+                        Button("Save") { save() }
+                            .bold()
+                            .disabled(!canSave)
+                    }
+                }
             }
         }
-    }
-
-    private func formField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.cremaMono(size: 9))
-                .tracking(0.08 * 9)
-                .foregroundStyle(Color.cremaTextSecondary)
-                .textCase(.uppercase)
-            content()
-        }
+        .tint(Color.cremaCopper)
     }
 
     private func save() {
-        focused = nil
         guard canSave else { return }
         isLoading = true
         error = nil
@@ -163,37 +100,6 @@ struct AddBeanView: View {
             }
             isLoading = false
         }
-    }
-}
-
-// MARK: - Form input (local, avoids auth FormField coupling)
-
-private struct CremaFormInput: View {
-    let placeholder: String
-    @Binding var text: String
-    var focused: FocusState<AddBeanView.Field?>.Binding
-    let field: AddBeanView.Field
-
-    var body: some View {
-        TextField(placeholder, text: $text)
-            .font(.cremaBody(size: 14))
-            .foregroundStyle(Color.cremaTextPrimary)
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.sentences)
-            .focused(focused, equals: field)
-            .tint(Color.cremaCopper)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(Color.cremaInputBg)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(
-                        focused.wrappedValue == field ? Color.cremaCopper : Color.cremaBorder,
-                        lineWidth: 0.5
-                    )
-            )
-            .animation(.easeInOut(duration: 0.15), value: focused.wrappedValue == field)
     }
 }
 
