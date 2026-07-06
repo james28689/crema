@@ -29,13 +29,15 @@ struct CremaPillTag: View {
 
 struct CremaStarRating: View {
     let value: Int
+    /// Shots are rated 1–10 (see crema-db-schema.md); default matches that scale.
+    var maxValue: Int = 10
     var onChange: ((Int) -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(1...5, id: \.self) { n in
+        HStack(spacing: maxValue > 5 ? 2 : 4) {
+            ForEach(1...maxValue, id: \.self) { n in
                 Image(systemName: n <= value ? "star.fill" : "star")
-                    .font(.system(size: 16, weight: .light))
+                    .font(.system(size: maxValue > 5 ? 12 : 16, weight: .light))
                     .foregroundStyle(n <= value ? Color.cremaCopper : Color.cremaBorder)
                     .contentShape(Rectangle())
                     .onTapGesture { onChange?(n) }

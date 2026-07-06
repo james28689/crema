@@ -44,11 +44,15 @@ final class APIClient {
 
     /// Base URL includes the trailing slash so relative path resolution works
     /// correctly when using URL(string:relativeTo:).
+    ///
+    /// Local vs. hosted is controlled by `APIEnvironment.current`. The
+    /// `LOCAL_API_BASE` env var (set via Xcode scheme) still overrides both,
+    /// for device/LAN testing where `localhost` won't resolve to the Mac.
     private let base: URL = {
         if let override = ProcessInfo.processInfo.environment["LOCAL_API_BASE"] {
             return URL(string: override)!
         }
-        return URL(string: "https://crema-api.watling.dev/v1/")!
+        return APIEnvironment.current.baseURL
     }()
 
     private let encoder: JSONEncoder = {

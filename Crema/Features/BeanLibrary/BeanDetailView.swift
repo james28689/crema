@@ -3,6 +3,7 @@
 //  Crema
 //
 
+import Charts
 import SwiftUI
 
 // MARK: - ViewModel
@@ -10,20 +11,27 @@ import SwiftUI
 @Observable @MainActor
 private final class BeanDetailViewModel {
     var shots: [Shot] = []
+    var timeline: [TimelineEntry] = []
     var isLoading = false
     var error: String?
 
     private let repo: ShotRepositoryProtocol
+    private let timelineRepo: TimelineRepositoryProtocol
 
-    init(repo: ShotRepositoryProtocol = ShotRepository()) {
+    init(repo: ShotRepositoryProtocol = ShotRepository(), timelineRepo: TimelineRepositoryProtocol = TimelineRepository()) {
         self.repo = repo
+        self.timelineRepo = timelineRepo
     }
 
     func load(beanId: UUID) async {
         isLoading = true
         error = nil
-        do { shots = try await repo.fetchShots(beanId: beanId) }
-        catch { self.error = error.localizedDescription }
+        do {
+            async let shotsResult = repo.fetchShots(beanId: beanId)
+            async let timelineResult = timelineRepo.fetchTimeline(beanId: beanId)
+            shots = try await shotsResult
+            timeline = try await timelineResult
+        } catch { self.error = error.localizedDescription }
         isLoading = false
     }
 
@@ -80,6 +88,18 @@ struct BeanDetailView: View {
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.cremaBgSurface)
+
+            if viewModel.timeline.count >= 2 {
+                CremaDivider()
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.cremaBgPrimary)
+
+                timelineChart
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.cremaBgPrimary)
+            }
 
             CremaDivider()
                 .listRowInsets(EdgeInsets())
@@ -150,6 +170,35 @@ struct BeanDetailView: View {
 
     private var statDivider: some View {
         Rectangle().fill(Color.cremaBorder).frame(width: 0.5, height: 28)
+    }
+
+    private var timelineChart: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("RATING OVER TIME")
+                .font(.cremaMono(size: 11))
+                .tracking(0.08 * 11)
+                .foregroundStyle(Color.cremaTextSecondary)
+
+            Chart(viewModel.timeline) { entry in
+                LineMark(
+                    x: .value("Shot", entry.shotNumber),
+                    y: .value("Rating", entry.rating)
+                )
+                .foregroundStyle(Color.cremaCopper)
+                .interpolationMethod(.catmullRom)
+
+                PointMark(
+                    x: .value("Shot", entry.shotNumber),
+                    y: .value("Rating", entry.rating)
+                )
+                .foregroundStyle(Color.cremaCopper)
+            }
+            .chartYScale(domain: 1...10)
+            .chartXAxisLabel("Shot #")
+            .frame(height: 160)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
 
     @ViewBuilder

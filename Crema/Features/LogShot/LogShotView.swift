@@ -63,7 +63,7 @@ private struct LogShotFormView: View {
     @State private var yield = "36.0"
     @State private var time = "28"
     @State private var grinderSetting = ""
-    @State private var rating = 4
+    @State private var rating = 7
     @State private var notes = ""
     @State private var isLoading = false
     @State private var error: String?
@@ -80,7 +80,14 @@ private struct LogShotFormView: View {
     }
 
     private var ratingLabel: String {
-        ["", "poor", "okay", "good", "great", "perfect"][rating]
+        switch rating {
+        case 0: return ""
+        case 1...2: return "poor"
+        case 3...4: return "okay"
+        case 5...6: return "good"
+        case 7...8: return "great"
+        default: return "perfect"
+        }
     }
 
     private var canSave: Bool {
