@@ -18,7 +18,7 @@ final class BeanDetailViewModel {
     private let repo: ShotRepositoryProtocol
     private let timelineRepo: TimelineRepositoryProtocol
 
-    init(repo: ShotRepositoryProtocol = ShotRepository(), timelineRepo: TimelineRepositoryProtocol = TimelineRepository()) {
+    init(repo: ShotRepositoryProtocol = ShotRepository(), timelineRepo: TimelineRepositoryProtocol = InsightsRepository()) {
         self.repo = repo
         self.timelineRepo = timelineRepo
     }

@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-enum AppTab: Hashable { case beans, shots, profile }
+enum AppTab: Hashable { case beans, shots, insights, profile }
 
 struct MainTabView: View {
     @State private var selectedTab: AppTab = .beans
@@ -23,6 +23,12 @@ struct MainTabView: View {
             Tab("Shots", systemImage: "cup.and.saucer.fill", value: AppTab.shots) {
                 NavigationStack {
                     ShotListView()
+                }
+            }
+
+            Tab("Insights", systemImage: "chart.xyaxis.line", value: AppTab.insights) {
+                NavigationStack {
+                    InsightsView()
                 }
             }
 

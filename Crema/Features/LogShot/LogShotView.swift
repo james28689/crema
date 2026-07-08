@@ -150,7 +150,7 @@ private struct LogShotFormView: View {
             }
         }
         .sheet(isPresented: $showBeanPicker) {
-            BeanPickerSheet(selected: $selectedBean)
+            CremaBeanPickerSheet(selected: $selectedBean)
         }
     }
 
@@ -373,72 +373,6 @@ private struct LogShotFormView: View {
             } catch {
                 self.error = error.localizedDescription
             }
-            isLoading = false
-        }
-    }
-}
-
-// MARK: - Bean picker sheet
-
-private struct BeanPickerSheet: View {
-    @Binding var selected: Bean?
-    @Environment(\.dismiss) private var dismiss
-    @State private var beans: [Bean] = []
-    @State private var isLoading = false
-    private let repo: BeanRepositoryProtocol = BeanRepository()
-
-    var body: some View {
-        NavigationStack {
-            Group {
-                if isLoading {
-                    ProgressView().tint(Color.cremaCopper)
-                } else {
-                    List {
-                        ForEach(beans) { bean in
-                            Button {
-                                selected = bean
-                                dismiss()
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(bean.name)
-                                            .font(.cremaBody(size: 17, weight: .medium))
-                                            .foregroundStyle(Color.cremaTextPrimary)
-                                        if let roaster = bean.roaster {
-                                            Text(roaster)
-                                                .font(.cremaBody(size: 14))
-                                                .foregroundStyle(Color.cremaTextSecondary)
-                                        }
-                                    }
-                                    Spacer()
-                                    if selected?.id == bean.id {
-                                        Image(systemName: "checkmark")
-                                            .fontWeight(.semibold)
-                                            .foregroundStyle(Color.cremaCopper)
-                                    }
-                                }
-                            }
-                            .listRowBackground(Color.cremaBgPrimary)
-                            .listRowSeparatorTint(Color.cremaBorder)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .background(Color.cremaBgPrimary.ignoresSafeArea())
-                }
-            }
-            .navigationTitle("Select Bean")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-        .tint(Color.cremaCopper)
-        .task {
-            isLoading = true
-            beans = (try? await repo.fetchBeans()) ?? []
             isLoading = false
         }
     }
