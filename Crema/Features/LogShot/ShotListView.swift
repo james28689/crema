@@ -106,11 +106,7 @@ struct ShotListView: View {
             }
         }
         .task(id: refreshID) { await viewModel.load() }
-        .alert("Error", isPresented: .constant(viewModel.error != nil)) {
-            Button("OK") { viewModel.error = nil }
-        } message: {
-            Text(viewModel.error ?? "")
-        }
+        .cremaErrorAlert(viewModel.error) { viewModel.error = nil }
     }
 }
 

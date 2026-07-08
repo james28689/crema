@@ -4,7 +4,6 @@
 //
 
 import SwiftUI
-import Supabase
 
 struct HomeView: View {
     @Environment(AppState.self) private var appState

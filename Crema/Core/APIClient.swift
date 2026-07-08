@@ -125,7 +125,9 @@ final class APIClient {
         guard let token = supabase.auth.currentSession?.accessToken else {
             throw APIError.unauthenticated
         }
+        #if DEBUG
         print("[APIClient] \(method) \(req.url?.absoluteString ?? "?") alg=\(jwtAlgorithm(token)) sub=\(jwtSubject(token))")
+        #endif
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         return req
@@ -144,7 +146,9 @@ final class APIClient {
         }
         guard (200..<300).contains(http.statusCode) else {
             let rawBody = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
+            #if DEBUG
             print("[APIClient] HTTP \(http.statusCode) \(response.url?.absoluteString ?? "?"): \(rawBody)")
+            #endif
             if http.statusCode == 401 {
                 try? await supabase.auth.signOut()
             }
@@ -159,9 +163,11 @@ final class APIClient {
         do {
             return try decoder.decode(type, from: data)
         } catch let error as DecodingError {
+            #if DEBUG
             let raw = String(data: data, encoding: .utf8) ?? "<binary>"
             print("[APIClient] Decode error (\(type)) from \(url?.absoluteString ?? "?"): \(decodingErrorDescription(error))")
             print("[APIClient] Raw body: \(raw)")
+            #endif
             throw error
         }
     }
@@ -226,6 +232,7 @@ final class APIClient {
 
 // MARK: - Debug helpers (dev only)
 
+#if DEBUG
 private func jwtAlgorithm(_ token: String) -> String {
     guard let header = jwtDecodeSegment(token.split(separator: ".").first.map(String.init)) else { return "?" }
     return (header["alg"] as? String) ?? "?"
@@ -246,3 +253,4 @@ private func jwtDecodeSegment(_ segment: String?) -> [String: Any]? {
           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
     return json
 }
+#endif
