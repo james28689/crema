@@ -27,21 +27,43 @@ struct CremaPillTag: View {
 
 // MARK: - Star rating
 
-struct CremaStarRating: View {
+/// Read-only rating display. Shots are rated 1–10 (see crema-db-schema.md) —
+/// shown as a number rather than stars since 10 discrete icons reads poorly.
+struct CremaRatingBadge: View {
     let value: Int
-    /// Shots are rated 1–10 (see crema-db-schema.md); default matches that scale.
-    var maxValue: Int = 10
-    var onChange: ((Int) -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: maxValue > 5 ? 2 : 4) {
-            ForEach(1...maxValue, id: \.self) { n in
-                Image(systemName: n <= value ? "star.fill" : "star")
-                    .font(.system(size: maxValue > 5 ? 12 : 16, weight: .light))
-                    .foregroundStyle(n <= value ? Color.cremaCopper : Color.cremaBorder)
-                    .contentShape(Rectangle())
-                    .onTapGesture { onChange?(n) }
-            }
+        HStack(alignment: .firstTextBaseline, spacing: 1) {
+            Text("\(value)")
+                .font(.cremaDisplay(size: 20))
+                .foregroundStyle(Color.cremaCopper)
+            Text("/10")
+                .font(.cremaBody(size: 12))
+                .foregroundStyle(Color.cremaTextSecondary)
+        }
+    }
+}
+
+/// Interactive 1–10 rating picker.
+struct CremaRatingSlider: View {
+    @Binding var value: Int
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Slider(
+                value: Binding(
+                    get: { Double(value) },
+                    set: { value = Int($0.rounded()) }
+                ),
+                in: 1...10,
+                step: 1
+            )
+            .tint(Color.cremaCopper)
+
+            Text("\(value)")
+                .font(.cremaDisplay(size: 20))
+                .foregroundStyle(Color.cremaCopper)
+                .frame(minWidth: 24, alignment: .trailing)
         }
     }
 }
@@ -103,7 +125,7 @@ struct ShotRow: View {
                         .foregroundStyle(Color.cremaTextSecondary)
                 }
                 Spacer(minLength: 8)
-                CremaStarRating(value: shot.rating)
+                CremaRatingBadge(value: shot.rating)
             }
 
             HStack(alignment: .top, spacing: 8) {

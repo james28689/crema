@@ -11,7 +11,7 @@ enum APIEnvironment {
     case local
     case hosted
 
-    static let current: APIEnvironment = .local
+    static let current: APIEnvironment = .hosted
 
     var baseURL: URL {
         switch self {

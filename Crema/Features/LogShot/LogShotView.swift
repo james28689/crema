@@ -276,7 +276,7 @@ private struct LogShotFormView: View {
                 .foregroundStyle(Color.cremaTextSecondary)
                 .textCase(.uppercase)
             HStack(spacing: 12) {
-                CremaStarRating(value: rating) { n in rating = n }
+                CremaRatingSlider(value: $rating)
                 Text(ratingLabel)
                     .font(.cremaMono(size: 11))
                     .tracking(0.06 * 11)
@@ -494,7 +494,7 @@ private struct ShotConfirmedView: View {
                                     .font(.cremaMono(size: 11))
                                     .tracking(0.08 * 11)
                                     .foregroundStyle(Color.cremaTextSecondary)
-                                CremaStarRating(value: shot.rating)
+                                CremaRatingBadge(value: shot.rating)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
