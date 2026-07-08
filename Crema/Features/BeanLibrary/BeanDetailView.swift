@@ -9,7 +9,7 @@ import SwiftUI
 // MARK: - ViewModel
 
 @Observable @MainActor
-private final class BeanDetailViewModel {
+final class BeanDetailViewModel {
     var shots: [Shot] = []
     var timeline: [TimelineEntry] = []
     var isLoading = false
@@ -126,11 +126,7 @@ struct BeanDetailView: View {
             }
         }
         .task(id: refreshID) { await viewModel.load(beanId: bean.id) }
-        .alert("Error", isPresented: .constant(viewModel.error != nil)) {
-            Button("OK") { viewModel.error = nil }
-        } message: {
-            Text(viewModel.error ?? "")
-        }
+        .cremaErrorAlert(viewModel.error) { viewModel.error = nil }
     }
 
     // MARK: Sub-views
@@ -145,8 +141,8 @@ struct BeanDetailView: View {
             }
             HStack(spacing: 6) {
                 if let origin = bean.origin { CremaPillTag(label: origin) }
-                if let process = bean.process { CremaPillTag(label: process.displayName) }
-                if let roastLevel = bean.roastLevel { CremaPillTag(label: roastLevel.displayName) }
+                if let process = bean.process { CremaPillTag(label: process.displayName, tint: .slate) }
+                if let roastLevel = bean.roastLevel { CremaPillTag(label: roastLevel.displayName, tint: .copper) }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

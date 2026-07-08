@@ -10,18 +10,76 @@ import SwiftUI
 // MARK: - Pill tag
 
 struct CremaPillTag: View {
+    enum Tint { case neutral, copper, slate }
+
     let label: String
+    var tint: Tint = .neutral
+
+    private var foreground: Color {
+        switch tint {
+        case .neutral: return Color.cremaTextSecondary
+        case .copper:  return Color.cremaCopper
+        case .slate:   return Color.cremaSlate
+        }
+    }
+
+    private var background: Color {
+        switch tint {
+        case .neutral: return Color.cremaBgSurface
+        case .copper:  return Color.cremaBgCopperTint
+        case .slate:   return Color.cremaBgSlateTint
+        }
+    }
+
+    private var border: Color {
+        tint == .neutral ? Color.cremaBorder : .clear
+    }
 
     var body: some View {
         Text(label)
             .font(.cremaMono(size: 11))
             .tracking(0.06 * 11)
-            .foregroundStyle(Color.cremaTextSecondary)
+            .foregroundStyle(foreground)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Color.cremaBgSurface)
+            .background(background)
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color.cremaBorder, lineWidth: 0.5))
+            .overlay(Capsule().stroke(border, lineWidth: 0.5))
+    }
+}
+
+// MARK: - Taste badge
+
+/// Renders a taste tag ("balanced" / "sour" / "bitter") with the semantic
+/// colours from the design system's status palette — the app's only cool
+/// accent (slate) and only distinct warm-dark accent (bitter) live here.
+struct CremaTasteBadge: View {
+    let tag: String
+
+    private var foreground: Color {
+        switch tag.lowercased() {
+        case "sour":  return Color.cremaSlate
+        case "bitter": return Color.cremaBitter
+        default:      return Color.cremaCopper
+        }
+    }
+
+    private var background: Color {
+        switch tag.lowercased() {
+        case "sour":  return Color.cremaBgSlateTint
+        case "bitter": return Color.cremaBgBitterTint
+        default:      return Color.cremaBgCopperTint
+        }
+    }
+
+    var body: some View {
+        Text(tag)
+            .font(.cremaBody(size: 11, weight: .medium))
+            .foregroundStyle(foreground)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(background)
+            .clipShape(Capsule())
     }
 }
 
@@ -136,10 +194,16 @@ struct ShotRow: View {
                 metricCell(label: "time", value: "\(shot.timeSec)", unit: "s")
                 if let grind = shot.grinderSetting {
                     metricDivider
-                    metricCell(label: "grind", value: grind, unit: "")
+                    metricCell(label: "grind", value: grind, unit: "", valueColor: Color.cremaSlate)
                 }
                 metricDivider
                 metricCell(label: "ratio", value: ratio, unit: "", valueColor: Color.cremaCopper)
+            }
+
+            if let tags = shot.tasteTags, !tags.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(tags, id: \.self) { CremaTasteBadge(tag: $0) }
+                }
             }
 
             if let notes = shot.notes, !notes.isEmpty {
@@ -191,6 +255,22 @@ struct CremaDivider: View {
             .fill(Color.cremaBorder)
             .frame(height: 0.5)
             .padding(.horizontal, inset)
+    }
+}
+
+// MARK: - Error alert
+
+extension View {
+    /// Standard "Error" alert used by list-backed screens whose view model
+    /// exposes an optional `error: String?`. Presents whenever `message` is
+    /// non-nil and calls `onDismiss` (typically `{ viewModel.error = nil }`)
+    /// when the user taps OK.
+    func cremaErrorAlert(_ message: String?, onDismiss: @escaping () -> Void) -> some View {
+        alert("Error", isPresented: .constant(message != nil)) {
+            Button("OK", action: onDismiss)
+        } message: {
+            Text(message ?? "")
+        }
     }
 }
 

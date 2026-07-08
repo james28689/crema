@@ -72,6 +72,44 @@ extension Color {
             ? UIColor(red: 0.878, green: 0.439, blue: 0.439, alpha: 1)  // #E07070
             : UIColor(red: 0.475, green: 0.122, blue: 0.122, alpha: 1)  // #791F1F
     })
+
+    // ── Cool accent (from crema-design-system.html §02) ────────────────────
+    //
+    // Slate Blue is the palette's "cool accent" — used for technical/info
+    // data points and the "sour" taste tag. Lightened in dark mode (#8AAAC8)
+    // to hold contrast against the espresso surfaces, same pattern as
+    // `cremaTextSecondary`'s parchment shift.
+    static let cremaSlate = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.541, green: 0.667, blue: 0.784, alpha: 1)  // #8AAAC8
+            : UIColor(red: 0.290, green: 0.376, blue: 0.502, alpha: 1)  // #4A6080
+    })
+
+    /// Semantic "bitter" (over-extracted) taste-tag colour.
+    static let cremaBitter = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.816, green: 0.608, blue: 0.451, alpha: 1)  // lightened for dark legibility
+            : UIColor(red: 0.478, green: 0.243, blue: 0.125, alpha: 1)  // #7A3E20
+    })
+
+    // ── Tinted fills, for badges & tags ─────────────────────────────────────
+    static let cremaBgCopperTint = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.722, green: 0.478, blue: 0.306, alpha: 0.15)
+            : UIColor(red: 0.961, green: 0.910, blue: 0.875, alpha: 1)  // #F5E8DF
+    })
+
+    static let cremaBgSlateTint = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.290, green: 0.376, blue: 0.502, alpha: 0.2)
+            : UIColor(red: 0.902, green: 0.925, blue: 0.953, alpha: 1)  // #E6ECF3
+    })
+
+    static let cremaBgBitterTint = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.478, green: 0.243, blue: 0.125, alpha: 0.2)
+            : UIColor(red: 0.961, green: 0.910, blue: 0.875, alpha: 1)  // #F5E8DF
+    })
 }
 
 // MARK: - Typography

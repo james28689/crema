@@ -64,6 +64,7 @@ private struct LogShotFormView: View {
     @State private var time = "28"
     @State private var grinderSetting = ""
     @State private var rating = 7
+    @State private var tasteTags: Set<String> = []
     @State private var notes = ""
     @State private var isLoading = false
     @State private var error: String?
@@ -112,6 +113,7 @@ private struct LogShotFormView: View {
                         ("grind", $grinderSetting, "setting", .default, Field.grind, Field.notes)
                     )
                     ratingRow
+                    tasteTagRow
                     notesField
                 }
                 .padding(.horizontal, 20)
@@ -286,6 +288,32 @@ private struct LogShotFormView: View {
         }
     }
 
+    private var tasteTagRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("taste")
+                .font(.cremaMono(size: 11))
+                .tracking(0.08 * 11)
+                .foregroundStyle(Color.cremaTextSecondary)
+                .textCase(.uppercase)
+            HStack(spacing: 8) {
+                ForEach(["sour", "balanced", "bitter"], id: \.self) { tag in
+                    Button {
+                        if tasteTags.contains(tag) {
+                            tasteTags.remove(tag)
+                        } else {
+                            tasteTags.insert(tag)
+                        }
+                    } label: {
+                        CremaTasteBadge(tag: tag)
+                            .opacity(tasteTags.isEmpty || tasteTags.contains(tag) ? 1 : 0.4)
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.15), value: tasteTags)
+                }
+            }
+        }
+    }
+
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("tasting notes")
@@ -337,7 +365,7 @@ private struct LogShotFormView: View {
                     timeSec: t,
                     grinderSetting: grinderSetting.trimmingCharacters(in: .whitespaces).nilIfEmpty,
                     rating: rating,
-                    tasteTags: nil,
+                    tasteTags: tasteTags.isEmpty ? nil : Array(tasteTags),
                     notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
                 )
                 let shot = try await repo.createShot(payload)
@@ -456,6 +484,13 @@ private struct ShotConfirmedView: View {
                     Text(bean.name)
                         .font(.cremaBody(size: 15))
                         .foregroundStyle(Color.cremaTextSecondary)
+                }
+
+                if let tags = shot?.tasteTags, !tags.isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(tags, id: \.self) { CremaTasteBadge(tag: $0) }
+                    }
+                    .padding(.top, 10)
                 }
 
                 Spacer()
